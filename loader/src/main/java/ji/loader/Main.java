@@ -31,13 +31,13 @@ import java.util.List;
 public class Main {
     private static final String LIB = "lib/";
     private static final String PREMAIN = "premain";
-    private static final String ZHONGL_JI_CORE_MAIN = "ji.core.Main";
+    private static final String JI_CORE_MAIN = "ji.core.Main";
 
     public static void premain(final String args, final Instrumentation inst) throws Exception {
         final URL[] urls = nestArchiveUrls(new JarFileArchive(getArchiveFileContains(Main.class)));
         final CompoundableClassLoader loader = new CompoundableClassLoader(urls);
         loader.add(Main.class.getClassLoader());
-        loader.loadClass(ZHONGL_JI_CORE_MAIN)
+        loader.loadClass(JI_CORE_MAIN)
               .getMethod(PREMAIN, String.class, Instrumentation.class)
               .invoke(null, args, inst);
     }

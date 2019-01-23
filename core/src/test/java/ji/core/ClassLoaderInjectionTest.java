@@ -19,6 +19,7 @@ package ji.core;
 import fj.data.List;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.dynamic.loading.ClassInjector;
+import net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation;
 import org.junit.Test;
 
 import java.io.File;
@@ -31,15 +32,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class ClassLoaderInjectionTest {
-    private static final File TMP_FILE = new File(AccessController.doPrivileged(
-            (PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir"))
-    );
-
 
     @Test
     public void should_inject_classes() {
         final Instrumentation inst = ByteBuddyAgent.install();
-        final ClassInjector injector = ClassInjector.UsingInstrumentation.of(TMP_FILE, BOOTSTRAP, inst);
+        final ClassInjector injector = UsingInstrumentation.of(new File(AccessController.doPrivileged(
+                (PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir"))
+        ), BOOTSTRAP, inst);
         final String name = "ji.core.Dispatcher";
         final Iterable<Class<?>> injected = new ClassLoaderInjection(injector).inject(List.arrayList(name, "non.existed"));
         assertThat(List.iterableList(injected).head().getName(), is(name));
