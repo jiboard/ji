@@ -35,14 +35,14 @@ import net.bytebuddy.implementation.MethodCall.ArgumentLoader.ForStackManipulati
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InlineAdviceGenerator implements F<Class<?>, DynamicType.Unloaded<?>> {
+final class InlineAdviceGenerator implements F<Class<?>, DynamicType.Unloaded<?>> {
 
     private final ByteBuddy byteBuddy;
     private final ElementMatcher<MethodDescription.InDefinedShape> adviceMethod;
     private final F<MethodDescription, String> key;
     private final F<TypeDescription, String> name;
 
-    public InlineAdviceGenerator(
+    InlineAdviceGenerator(
             ByteBuddy byteBuddy,
             ElementMatcher<MethodDescription.InDefinedShape> adviceMethod,
             F<TypeDescription, String> name,

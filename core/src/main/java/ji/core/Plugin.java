@@ -18,14 +18,6 @@ package ji.core;
 import java.lang.annotation.*;
 
 public interface Plugin {
-//    public static List<Class<?>> load() {
-//        final ClassLoader loader = Plugin.class.getClassLoader();
-//        final F<String, Validation<Exception, Class<?>>> load0 = Try.f(loader::loadClass);
-//        return AutoServices.classesAnnotated(Plugin.class)
-//                           .map(n -> P.p(n, load0.f(n)))
-//                           .filter(Filters.successOrWarn(s -> "Loaded" + s, s -> "Failed to load " + s))
-//                           .map(p -> p._2().success());
-//    }
 
     /**
      * Indicate to inject a object with qualified identity.

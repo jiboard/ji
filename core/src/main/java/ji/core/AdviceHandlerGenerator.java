@@ -36,7 +36,7 @@ import java.util.Map;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 
-public class AdviceHandlerGenerator implements F<Object, Map<String, Dispatcher.Handler>> {
+final class AdviceHandlerGenerator implements F<Object, Map<String, Dispatcher.Handler>> {
 
     private static final String FIELD_ADVICE = "advice";
 
@@ -45,7 +45,7 @@ public class AdviceHandlerGenerator implements F<Object, Map<String, Dispatcher.
     private final F<MethodDescription, String> key;
     private final F<MethodDescription, String> name;
 
-    public AdviceHandlerGenerator(
+    AdviceHandlerGenerator(
             ByteBuddy byteBuddy,
             ElementMatcher<? super MethodDescription.InDefinedShape> adviceMethod,
             F<MethodDescription, String> key,
