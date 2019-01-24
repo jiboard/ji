@@ -19,4 +19,5 @@ public class MainTest {
                 is(List.arrayList("Handler", "Dispatcher", "DefaultHandler"))
         );
     }
+
 }

@@ -35,36 +35,29 @@ import static java.util.Collections.list;
 final class AutoServices {
 
     static List<String> classesAnnotated(Class<?> cls) {
+        return classAnnotated(cls, cls.getClassLoader());
+    }
 
+    static List<String> classAnnotated(Class<?> cls, ClassLoader loader) {
         final F<URL, Validation<IOException, BufferedReader>> reader = Try.f(url -> {
             final URLConnection connection = url.openConnection();
             final InputStream stream = connection.getInputStream();
             return new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
         });
 
-        return Option.some(resources(cls.getClassLoader(), "META-INF/services/" + cls.getName()))
-                     .filter(successOrWarn())
-                     .bind(p -> p._2().toOption())
-                     .map(List::iterableList)
-                     .orSome(List.nil())
-                     .map(u -> P.p(u, reader.f(u)))
-                     .filter(successOrWarn())
-                     .map(p -> P.p(p._1(), readLines().f(p._2().success())))
-                     .filter(successOrWarn())
-                     .map(p -> p._2().success())
-                     .bind(Function.identity());
+        final F<BufferedReader, Validation<IOException, List<String>>> readLines = Try.f(r -> accumulate().f(r).run().run());
+
+        final List<URL> urls = Option.some(resources(loader, "META-INF/services/" + cls.getName()))
+                                     .filter(Patterns::successOrWarn)
+                                     .bind(p -> p._2().toOption())
+                                     .map(List::iterableList)
+                                     .orSome(List.nil());
+
+        return Function.andThen(Patterns.safeMap(reader), Patterns.safeMap(readLines)).f(urls).bind(Function.identity());
     }
 
     private static P2<String, Validation<IOException, ArrayList<URL>>> resources(ClassLoader loader, String name) {
         return P.p(name, Try.f(() -> list(loader.getResources(name))).f());
-    }
-
-    private static <A, B, E extends Exception> F<P2<A, Validation<E, B>>, Boolean> successOrWarn() {
-        return Filters.successOrWarn(s -> "Read " + s, s -> "Failed to read " + s);
-    }
-
-    private static F<BufferedReader, Validation<IOException, List<String>>> readLines() {
-        return Try.f(r -> accumulate().f(r).run().run());
     }
 
     private static F<BufferedReader, IO<IterV<String, List<String>>>> accumulate() {

@@ -16,10 +16,7 @@
 package ji.core;
 
 import fj.F;
-import fj.P;
-import fj.P2;
 import fj.Try;
-import fj.data.HashMap;
 import fj.data.List;
 import fj.data.Validation;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -43,16 +40,8 @@ final class ClassLoaderInjection {
 
     private Map<String, byte[]> types(Iterable<String> names) {
         final ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(getClass().getClassLoader());
-
         final F<String, Validation<IOException, byte[]>> bytes = Try.f(n -> locator.locate(n).resolve());
-
-        final List<P2<String, byte[]>> p2s = List
-                .iterableList(names)
-                .map(name -> P.p(name, bytes.f(name)))
-                .filter(Filters.successOrWarn(s -> "Located class " + s, s -> "Failed to locate class " + s))
-                .map(p -> p.map2(v -> v.success()));
-
-        return HashMap.iterableHashMap(p2s).toMap();
+        return Patterns.safeMapToHashMap(bytes).f(List.iterableList(names));
     }
 
     interface Target {}

@@ -16,6 +16,8 @@
 package ji.core;
 
 import com.google.common.annotations.VisibleForTesting;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 
 import java.io.File;
@@ -31,6 +33,9 @@ public final class Main {
 
     public static void premain(final String args, final Instrumentation inst) {
         log.info(() -> "Inject bootstrap classloader: " + appendBootstrapClassLoaderSearchBy(inst));
+
+        final ByteBuddy bb = new ByteBuddy();
+        new AgentBuilder.Default(bb).installOn(inst);
     }
 
     @VisibleForTesting
@@ -41,6 +46,14 @@ public final class Main {
         final ClassLoaderInjection injection = new ClassLoaderInjection(injector);
         return injection.inject(AutoServices.classesAnnotated(ClassLoaderInjection.Target.class));
     }
+
+//    static List<Class<?>> loadPlugins(ClassLoader loader) {
+//        final F<String, Validation<Exception, Class<?>>> load = Try.f(loader::loadClass);
+//
+//        final List<Class<?>> f = Patterns.safeMap(load).f(AutoServices.classesAnnotated(Plugin.class));
+//        return f;
+//    }
+
 
     private Main() {}
 }
