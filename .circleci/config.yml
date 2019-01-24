@@ -9,6 +9,6 @@ jobs:
     steps:
       - checkout
       - run: mvn clean compile -pl core -am
-      - run: tree core/target/classes
+      - run: ls core/target/classes/ji/core
 #      - run: mvn clean test jacoco:report
 #      - run: mvn coveralls:report -DrepoToken=$COVERALL

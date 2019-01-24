@@ -6,7 +6,7 @@ jdk:
 script:
   #  - mvn test jacoco:report
   - mvn clean compile -pl core -am
-  - tree core/target/classes
+  - ls core/target/classes/ji/core
 
 #after_success:
 #  - mvn coveralls:report
