@@ -33,8 +33,8 @@
         <auto-service.version>1.0-rc4</auto-service.version>
         <config.version>1.2.1</config.version>
         <fj.version>4.8.1</fj.version>
-        <retrolambda.target>1.6</retrolambda.target>
         <findbugs-annotations.version>3.0.1</findbugs-annotations.version>
+        <jacoco-maven-plugin.skip>false</jacoco-maven-plugin.skip>
     </properties>
 
     <dependencies>
@@ -112,6 +112,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>${jacoco-maven-plugin.skip}</skip>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.eluder.coveralls</groupId>
@@ -170,26 +173,36 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-                        <plugin>
-                            <groupId>net.orfjackal.retrolambda</groupId>
-                            <artifactId>retrolambda-maven-plugin</artifactId>
-                            <version>2.5.6</version>
-                            <executions>
-                                <execution>
-                                    <goals>
-                                        <goal>process-main</goal>
-                                        <goal>process-test</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                            <configuration>
-                                <target>${retrolambda.target}</target>
-                                <quiet>true</quiet>
-                            </configuration>
-                        </plugin>
-            -->
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>target-jdk6</id>
+            <properties>
+                <jacoco-maven-plugin.skip>true</jacoco-maven-plugin.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.orfjackal.retrolambda</groupId>
+                        <artifactId>retrolambda-maven-plugin</artifactId>
+                        <version>2.5.6</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>process-main</goal>
+                                    <goal>process-test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <target>1.6</target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
