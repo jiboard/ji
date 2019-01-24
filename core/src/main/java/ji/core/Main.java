@@ -15,30 +15,15 @@
  */
 package ji.core;
 
-import com.google.common.annotations.VisibleForTesting;
-import net.bytebuddy.dynamic.loading.ClassInjector;
-import net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation;
-
-import java.io.File;
 import java.lang.instrument.Instrumentation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
-import static net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation.Target.BOOTSTRAP;
+import static ji.core.ClassLoaderInjection.appendBootstrapClassLoaderSearchBy;
 
 public final class Main {
+    private static final Logger log = Logger.singleton();
 
     public static void premain(final String args, final Instrumentation inst) {
-        Logger.singleton().info(() -> "Injected classes " + appendBootstrapClassLoaderSearchBy(inst));
-    }
-
-    @VisibleForTesting
-    static Iterable<Class<?>> appendBootstrapClassLoaderSearchBy(Instrumentation inst) {
-        final ClassInjector injector = UsingInstrumentation.of(new File(AccessController.doPrivileged(
-                (PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir"))
-        ), BOOTSTRAP, inst);
-        final ClassLoaderInjection injection = new ClassLoaderInjection(injector);
-        return injection.inject(AutoServices.classesAnnotated(ClassLoaderInjection.Target.class));
+        log.info(() -> "Inject bootstrap classloader: " + appendBootstrapClassLoaderSearchBy(inst));
     }
 
     private Main() {}

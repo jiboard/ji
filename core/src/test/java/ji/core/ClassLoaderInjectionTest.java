@@ -24,23 +24,30 @@ import org.junit.Test;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
+import static java.util.Collections.singleton;
 import static net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation.Target.BOOTSTRAP;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class ClassLoaderInjectionTest {
 
+    final Instrumentation inst = ByteBuddyAgent.install();
+
     @Test
-    public void should_inject_classes() {
-        final Instrumentation inst = ByteBuddyAgent.install();
-        final ClassInjector injector = UsingInstrumentation.of(new File(AccessController.doPrivileged(
-                (PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir"))
-        ), BOOTSTRAP, inst);
-        final String name = "ji.core.Dispatcher";
-        final Iterable<Class<?>> injected = new ClassLoaderInjection(injector).inject(List.arrayList(name, "non.existed"));
-        assertThat(List.iterableList(injected).head().getName(), is(name));
+    public void should_inject_nothing_with_non_existed_class() {
+        final ClassInjector injector = UsingInstrumentation.of(new File("target"), BOOTSTRAP, inst);
+        final Iterable<Class<?>> injected = new ClassLoaderInjection(injector).inject(singleton("non.existed"));
+        assertTrue(List.iterableList(injected).isEmpty());
+    }
+
+    @Test
+    public void should_inject_target_classes() {
+        final Iterable<Class<?>> injected = ClassLoaderInjection.appendBootstrapClassLoaderSearchBy(inst);
+        assertThat(
+                List.iterableList(injected).map(Class::getSimpleName),
+                is(List.arrayList("Handler", "Dispatcher", "DefaultHandler"))
+        );
     }
 }

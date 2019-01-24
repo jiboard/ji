@@ -17,6 +17,7 @@
 
 package ji.core;
 
+import com.google.auto.service.AutoService;
 import fj.data.List;
 import org.junit.Test;
 
@@ -26,8 +27,11 @@ import static org.junit.Assert.assertThat;
 public class AutoServicesTest {
     @Test
     public void should_get_classes() {
-        final List<String> classes = AutoServices.classesAnnotated(ClassLoaderInjection.Target.class);
-        assertThat(classes, is(List.arrayList(Dispatcher.Handler.class, Dispatcher.DefaultHandler.class, Dispatcher.class).map(Class::getName)));
+        assertThat(AutoServices.classesAnnotated(Foo.class), is(List.arrayList(Bar.class.getName())));
     }
 
+    private interface Foo {}
+
+    @AutoService(Foo.class)
+    private static class Bar implements Foo {}
 }
