@@ -28,6 +28,7 @@ import java.lang.instrument.Instrumentation;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import static ji.core.AutoServices.classesAnnotated;
 import static net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation.Target.BOOTSTRAP;
 import static net.bytebuddy.dynamic.loading.ClassInjector.UsingInstrumentation.of;
 
@@ -47,12 +48,11 @@ public final class Main {
                 (PrivilegedAction<String>) () -> System.getProperty("java.io.tmpdir"))
         ), BOOTSTRAP, inst);
         final ClassLoaderInjection injection = new ClassLoaderInjection(injector);
-        return injection.inject(AutoServices.classesAnnotated(ClassLoaderInjection.Target.class));
+        return injection.inject(classesAnnotated(ClassLoaderInjection.Target.class));
     }
 
     static List<Class<?>> loadPlugins(ClassLoader loader) {
-        final F<String, Validation<Exception, Class<?>>> load = Try.f(loader::loadClass);
-        return Patterns.safeMap(load).f(AutoServices.classesAnnotated(Plugin.class));
+        return Patterns.safeMap(Try.f(loader::loadClass)).f(classesAnnotated(Plugin.class));
     }
 
 
