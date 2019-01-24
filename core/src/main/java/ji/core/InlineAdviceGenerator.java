@@ -21,6 +21,7 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
 import net.bytebuddy.description.modifier.MethodManifestation;
+import net.bytebuddy.description.modifier.ModifierContributor.ForMethod;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
@@ -29,11 +30,13 @@ import net.bytebuddy.dynamic.DynamicType.Builder;
 import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ParameterDefinition.Simple;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.MethodCall.ArgumentLoader.ForMethodParameterArray;
 import net.bytebuddy.implementation.MethodCall.ArgumentLoader.ForStackManipulation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
+
+import static net.bytebuddy.implementation.MethodCall.ArgumentLoader;
+import static net.bytebuddy.implementation.MethodCall.invoke;
 
 final class InlineAdviceGenerator implements F<Class<?>, DynamicType.Unloaded<?>> {
 
@@ -64,7 +67,8 @@ final class InlineAdviceGenerator implements F<Class<?>, DynamicType.Unloaded<?>
     }
 
     private Builder<?> defineMethod(Builder<?> b, MethodDescription.InDefinedShape desc) {
-        final Simple<?> i = b.defineMethod(desc.getName(), desc.getReturnType(), Ownership.STATIC, Visibility.PUBLIC, MethodManifestation.FINAL);
+        final ForMethod[] modifiers = {Ownership.STATIC, Visibility.PUBLIC, MethodManifestation.FINAL};
+        final Simple<?> i = b.defineMethod(desc.getName(), desc.getReturnType(), modifiers);
         return List.iterableList(desc.getParameters())
                    .foldLeft(this::withParameter, i)
                    .intercept(call(desc))
@@ -73,10 +77,10 @@ final class InlineAdviceGenerator implements F<Class<?>, DynamicType.Unloaded<?>
 
     private Implementation call(MethodDescription.InDefinedShape desc) {
         try {
-
-            return MethodCall.invoke(Dispatcher.class.getDeclaredMethod("execute", String.class, Object[].class))
-                             .with(ForStackManipulation.of(key.f(desc)), ForMethodParameterArray.ForInstrumentedMethod.INSTANCE)
-                             .withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
+            final ArgumentLoader.Factory name = ForStackManipulation.of(key.f(desc));
+            return invoke(Dispatcher.class.getDeclaredMethod("execute", String.class, Object[].class))
+                    .with(name, ForMethodParameterArray.ForInstrumentedMethod.INSTANCE)
+                    .withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
         } catch (NoSuchMethodException e) {
             return FixedValue.nullValue();
         }
