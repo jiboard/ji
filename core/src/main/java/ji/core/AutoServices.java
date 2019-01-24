@@ -32,6 +32,9 @@ import java.util.ArrayList;
 
 import static java.util.Collections.list;
 
+/**
+ * Find classes annotated with {@link com.google.auto.service.AutoService}.
+ */
 final class AutoServices {
 
     static List<String> classesAnnotated(Class<?> cls) {
@@ -48,12 +51,12 @@ final class AutoServices {
         final F<BufferedReader, Validation<IOException, List<String>>> readLines = Try.f(r -> accumulate().f(r).run().run());
 
         final List<URL> urls = Option.some(resources(loader, "META-INF/services/" + cls.getName()))
-                                     .filter(Patterns::successOrWarn)
+                                     .filter(Functional::successOrWarn)
                                      .bind(p -> p._2().toOption())
                                      .map(List::iterableList)
                                      .orSome(List.nil());
 
-        return Function.andThen(Patterns.safeMap(reader), Patterns.safeMap(readLines)).f(urls).bind(Function.identity());
+        return Function.andThen(Functional.safeMap(reader), Functional.safeMap(readLines)).f(urls).bind(Function.identity());
     }
 
     private static P2<String, Validation<IOException, ArrayList<URL>>> resources(ClassLoader loader, String name) {

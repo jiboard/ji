@@ -4,4 +4,4 @@
 
 # Ji(迹)
 
-Ji is a java agent framework for [APM](https://en.wikipedia.org/wiki/Application_performance_management).
+Ji 是一套编写 [Java Agent](https://docs.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html) 微型框架.

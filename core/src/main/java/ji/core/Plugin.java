@@ -15,6 +15,9 @@
  */
 package ji.core;
 
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
 import java.lang.annotation.*;
 
 public interface Plugin {
@@ -25,7 +28,7 @@ public interface Plugin {
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.PARAMETER)
-    @interface Import {
+    @interface Inject {
         /**
          * @return identity
          * @see Export
@@ -43,7 +46,7 @@ public interface Plugin {
     @interface Export {
         /**
          * @return identity for qualification when it has multiple objects of the same type.
-         * @see Import
+         * @see Inject
          */
         String value() default "";
     }
@@ -55,7 +58,7 @@ public interface Plugin {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @interface Transform {
-        Class<?>[] with();
+        Class<? extends Matchable>[] with();
     }
 
     /**
@@ -71,4 +74,7 @@ public interface Plugin {
         String value();
     }
 
+    interface Matchable {
+        ElementMatcher<? super MethodDescription> method();
+    }
 }

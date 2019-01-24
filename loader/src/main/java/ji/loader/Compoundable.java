@@ -16,5 +16,5 @@
 package ji.loader;
 
 public interface Compoundable {
-    void add(ClassLoader cl);
+    ClassLoader include(ClassLoader cl);
 }

@@ -41,7 +41,7 @@ final class ClassLoaderInjection {
     private Map<String, byte[]> types(Iterable<String> names) {
         final ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(getClass().getClassLoader());
         final F<String, Validation<IOException, byte[]>> bytes = Try.f(n -> locator.locate(n).resolve());
-        return Patterns.safeMapToHashMap(bytes).f(List.iterableList(names));
+        return Functional.safeMapToHashMap(bytes).f(List.iterableList(names));
     }
 
     interface Target {}

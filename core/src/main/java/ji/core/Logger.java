@@ -15,80 +15,62 @@
  */
 package ji.core;
 
-import fj.F0;
-
 /**
  * A simple logger based on {@link System#err }.
  */
 public abstract class Logger {
 
-    private static final Logger SINGLETON = new Logger() {};
+    public static final Logger LOG = new Logger() {};
 
-    public static Logger singleton() {
-        return SINGLETON;
-    }
-
-    private final Level level;
+    private final Level expect;
 
     private Logger() {
-        final String name = System.getProperty("ji.logging.level", Level.INFO.name());
+        final String name = System.getProperty("ji.logging.expect", Level.INFO.name());
         Level l;
         try {
             l = Level.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
-            Level.WARN.log("Supported level " + name, null);
+            Level.WARN.log("Supported expect " + name, null);
             l = Level.INFO;
         }
 
-        level = l;
+        expect = l;
     }
 
-    public void debug(String message) {
-        debug(() -> message);
+    public void debug(String format, Object... args) {
+        log(Level.DEBUG, format, args);
     }
 
-    public void debug(F0<String> message) {
-        log(Level.DEBUG, message);
+    public void info(String format, Object... args) {
+        log(Level.INFO, format, args);
     }
 
-    public void info(String message) {
-        info(() -> message);
+    public void warn(String format, Object... args) {
+        warn(null, format, args);
     }
 
-    public void info(F0<String> message) {
-        log(Level.INFO, message);
+    public void warn(Throwable cause, String format, Object... args) {
+        log(Level.WARN, cause, format, args);
     }
 
-    public void warn(String message) {
-        warn(message, null);
+    private void log(Level actual, String format, Object... args) {
+        log(actual, null, format, args);
     }
 
-    public void warn(String message, Throwable cause) {
-        warn(() -> message, cause);
-    }
-
-    public void warn(F0<String> message) {
-        warn(message, null);
-    }
-
-    public void warn(F0<String> message, Throwable cause) {
-        log(Level.WARN, message, cause);
-    }
-
-    private void log(Level l, F0<String> message) {
-        log(l, message, null);
-    }
-
-    private void log(Level l, F0<String> message, Throwable cause) {
-        if (l.ordinal() >= level.ordinal()) l.log(message.f(), cause);
+    private void log(Level actual, Throwable cause, String format, Object... args) {
+        if (actual.ordinal() >= expect.ordinal()) {
+            actual.log(args.length == 0 ? format : String.format(format, args), cause);
+        }
     }
 
     private enum Level {
         DEBUG, INFO, WARN;
 
         public void log(String message, Throwable cause) {
-            System.err.printf("ji> [%5s] %s%n", name(), message);
-            if (cause != null) cause.printStackTrace(System.err);
+            synchronized (System.err) {
+                System.err.printf("[JI] %5s - %s%n", name(), message);
+                if (cause != null) cause.printStackTrace(System.err);
+            }
         }
     }
 }

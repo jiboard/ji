@@ -18,6 +18,8 @@ package ji.loader;
 import org.springframework.boot.loader.LaunchedURLClassLoader;
 
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -26,11 +28,14 @@ class CompoundableClassLoader extends LaunchedURLClassLoader implements Compound
 
     private final Set<ClassLoader> externals = new CopyOnWriteArraySet<>();
 
-    CompoundableClassLoader(URL[] urls) {super(urls, BOOTSTRAP_CLASS_LOADER);}
+    CompoundableClassLoader(URL[] urls) {
+        super(urls, BOOTSTRAP_CLASS_LOADER);
+    }
 
     @Override
-    public void add(ClassLoader cl) {
+    public ClassLoader include(ClassLoader cl) {
         externals.add(cl);
+        return this;
     }
 
     @Override
