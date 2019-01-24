@@ -10,5 +10,4 @@ jobs:
       - checkout
       - run: mvn clean test-compile -pl core -am
       - run: ls core/target/classes/ji/core
-#      - run: mvn clean test jacoco:report
-#      - run: mvn coveralls:report -DrepoToken=$COVERALL
+      - run: mvn  test jacoco:report -DrepoToken=$COVERALL
