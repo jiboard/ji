@@ -63,7 +63,7 @@ public class PluginTest {
         public static class CaptureMethod {
             private final AtomicReference<String> ref;
 
-            public CaptureMethod(AtomicReference<String> ref) {this.ref = ref;}
+            public CaptureMethod(@Plugin.Import AtomicReference<String> ref) {this.ref = ref;}
 
             @Advice.OnMethodEnter
             public void enter(@Advice.Origin("#m") String method) {

@@ -24,7 +24,7 @@ public interface Plugin {
      */
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
+    @Target(ElementType.PARAMETER)
     @interface Import {
         /**
          * @return identity
