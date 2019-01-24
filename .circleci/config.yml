@@ -8,5 +8,7 @@ jobs:
       - image: maven:3.6-jdk-8-alpine
     steps:
       - checkout
-      - run: mvn test jacoco:report
-      - run: mvn coveralls:report -DrepoToken=$COVERALL
+      - run: mvn clean compile -pl core -am
+      - run: tree core/target/classes
+#      - run: mvn clean test jacoco:report
+#      - run: mvn coveralls:report -DrepoToken=$COVERALL

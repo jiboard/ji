@@ -1,13 +1,15 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 script:
-  - mvn test jacoco:report
+  #  - mvn test jacoco:report
+  - mvn clean compile -pl core -am
+  - tree core/target/classes
 
-after_success:
-  - mvn coveralls:report
+#after_success:
+#  - mvn coveralls:report
 
 notifications:
   email:
