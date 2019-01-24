@@ -4,12 +4,10 @@ jdk:
   - openjdk8
 
 script:
-  #  - mvn test jacoco:report
-  - mvn clean test-compile -pl core -am
-  - ls core/target/classes/ji/core
+  - mvn clean test jacoco:report -pl core -am
 
-#after_success:
-#  - mvn coveralls:report
+after_success:
+  - mvn coveralls:report
 
 notifications:
   email:
