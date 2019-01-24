@@ -17,7 +17,6 @@ package ji.core;
 
 import fj.F;
 import fj.P;
-import fj.data.HashMap;
 import fj.data.List;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
@@ -59,12 +58,11 @@ final class AdviceHandlerGenerator implements F<Object, Map<String, Dispatcher.H
     @Override
     public Map<String, Dispatcher.Handler> f(Object advice) {
         final TypeDescription desc = TypeDescription.ForLoadedType.of(advice.getClass());
-
-        return HashMap.iterableHashMap(
+        return Patterns.asMap(
                 List.iterableList(desc.getDeclaredMethods().filter(adviceMethod))
                     .map(d -> P.p(key.f(d), make(d)))
                     .map(p -> p.map2(u -> instance(u, advice)))
-        ).toMap();
+        );
     }
 
     private Unloaded<Object> make(MethodDescription desc) {

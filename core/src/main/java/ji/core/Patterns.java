@@ -30,6 +30,10 @@ public final class Patterns {
         }
     }
 
+    public static <A, B> Map<A, B> asMap(Iterable<P2<A, B>> pairs) {
+        return HashMap.iterableHashMap(pairs).toMap();
+    }
+
     private static <A, B> List<B> success(List<P2<A, B>> l) {
         return l.map(P2::_2);
     }
@@ -38,10 +42,6 @@ public final class Patterns {
         return a -> a.map(i -> P.p(i, f.f(i)))
                      .filter(Patterns::successOrWarn)
                      .map(p -> p.map2(v -> v.success()));
-    }
-
-    private static <A, B> Map<A, B> asMap(Iterable<P2<A, B>> pairs) {
-        return HashMap.iterableHashMap(pairs).toMap();
     }
 
     private Patterns() {}

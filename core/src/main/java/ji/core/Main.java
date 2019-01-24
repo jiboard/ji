@@ -16,6 +16,9 @@
 package ji.core;
 
 import com.google.common.annotations.VisibleForTesting;
+import fj.Try;
+import fj.data.List;
+import fj.data.Validation;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.dynamic.loading.ClassInjector;
@@ -47,12 +50,10 @@ public final class Main {
         return injection.inject(AutoServices.classesAnnotated(ClassLoaderInjection.Target.class));
     }
 
-//    static List<Class<?>> loadPlugins(ClassLoader loader) {
-//        final F<String, Validation<Exception, Class<?>>> load = Try.f(loader::loadClass);
-//
-//        final List<Class<?>> f = Patterns.safeMap(load).f(AutoServices.classesAnnotated(Plugin.class));
-//        return f;
-//    }
+    static List<Class<?>> loadPlugins(ClassLoader loader) {
+        final F<String, Validation<Exception, Class<?>>> load = Try.f(loader::loadClass);
+        return Patterns.safeMap(load).f(AutoServices.classesAnnotated(Plugin.class));
+    }
 
 
     private Main() {}
