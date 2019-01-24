@@ -9,4 +9,4 @@ jobs:
     steps:
       - checkout
       - run: mvn test jacoco:report
-      - run: mvn coveralls:report
+      - run: mvn coveralls:report -DrepoToken=$COVERALL
