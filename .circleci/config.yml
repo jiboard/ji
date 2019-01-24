@@ -1,6 +1,9 @@
 version: 2
 jobs:
-  test:
+  build:
+    branches:
+      only:
+        - master
     docker:
       - image: maven:3.6-jdk-8-alpine
     steps:
