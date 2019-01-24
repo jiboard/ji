@@ -1,0 +1,9 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: maven:3.6-jdk-8-alpine
+    steps:
+      - checkout
+      - run: mvn test jacoco:report
+      - run: mvn coveralls:report
