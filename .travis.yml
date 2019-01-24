@@ -5,7 +5,7 @@ jdk:
 
 script:
   #  - mvn test jacoco:report
-  - mvn clean compile -pl core -am
+  - mvn clean test-compile -pl core -am
   - ls core/target/classes/ji/core
 
 #after_success:
