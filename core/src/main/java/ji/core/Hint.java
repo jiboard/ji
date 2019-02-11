@@ -7,7 +7,6 @@ import fj.data.Validation;
 import ji.loader.Compoundable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.agent.builder.AgentBuilder.Transformer.ForAdvice;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
@@ -27,6 +26,7 @@ import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.MethodCall.ArgumentLoader;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 
 import java.lang.Class;
 
@@ -73,17 +73,40 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
 
         @Override
         public AgentBuilder.Transformer f(F<ClassLoader, Validation<Exception, Plugin.Matchable>> advice) {
-            return (b, td, cl, m) -> advice.f(comp.include(cl)).validation(
-                    e -> {
-                        Logger.LOG.warn(e, "Failed to transform %s", td);
-                        return b;
-                    },
-                    o -> {
-                        registry.f(o);
-                        return new ForAdvice().include(locator).advice(o.method(), inlineClass).transform(b, td, cl, m);
+            return new AgentBuilder.Transformer() {
+                AgentBuilder.Transformer delegate;
+
+                @Override
+                public synchronized DynamicType.Builder<?> transform(DynamicType.Builder<?> b, TypeDescription td, ClassLoader cl, JavaModule m) {
+                    if (delegate == null) {
+                        delegate = advice.f(comp.include(cl)).validation(
+                                WarningTransformer::new,
+                                o -> {
+                                    registry.f(o);
+                                    return new ForAdvice().include(locator).advice(o.method(), inlineClass);
+                                }
+                        );
                     }
-            );
+                    return delegate.transform(b, td, cl, m);
+                }
+            };
         }
+
+        private static class WarningTransformer implements AgentBuilder.Transformer {
+
+            private final Exception cause;
+
+            public WarningTransformer(Exception cause) {
+                this.cause = cause;
+            }
+
+            @Override
+            public DynamicType.Builder<?> transform(DynamicType.Builder<?> b, TypeDescription td, ClassLoader cl, JavaModule m) {
+                Logger.LOG.warn(cause, "Failed to transform %s", td);
+                return b;
+            }
+        }
+
     }
 
     /**

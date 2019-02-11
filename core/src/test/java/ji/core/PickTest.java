@@ -1,9 +1,12 @@
 package ji.core;
 
 import com.typesafe.config.ConfigFactory;
+import ji.core.Pick.BuildParameters;
+import ji.core.Pick.BuildParameters.GetValues;
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.dynamic.DynamicType;
 import org.junit.Test;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -19,30 +22,16 @@ public class PickTest {
 
     @Test
     public void should_build_empty_arguments() throws Exception {
-        final Object[] args = Pick.BuildParameters.Generate.Default
-                .of(bb, Pick.BuildParameters.GetValues.CONF)
-                .f(td.getDeclaredMethods().filter(named("foo")).getOnly())
-                .success()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance()
-                .f(ConfigFactory.empty());
+        final MethodDescription md = td.getDeclaredMethods().filter(named("foo")).getOnly();
+        final Object[] args = Dynamic.instance(make(GetValues.CONF, bb, md), getClass().getClassLoader()).f(ConfigFactory.empty());
 
         assertThat(args.length, is(0));
     }
 
     @Test
     public void should_build_arguments_by_config() throws Exception {
-        final Object[] args = Pick.BuildParameters.Generate.Default
-                .of(bb, Pick.BuildParameters.GetValues.CONF)
-                .f(td.getDeclaredMethods().filter(named("bar")).getOnly())
-                .success()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance()
-                .f(ConfigFactory.parseString("a = a"));
+        final MethodDescription md = td.getDeclaredMethods().filter(named("bar")).getOnly();
+        final Object[] args = Dynamic.instance(make(GetValues.CONF, bb, md), getClass().getClassLoader()).f(ConfigFactory.parseString("a = a"));
 
         assertThat(args[0], is("a"));
     }
@@ -52,23 +41,17 @@ public class PickTest {
         final Gather.Ref ref = mock(Gather.Ref.class);
         when(ref.f("java.lang.Object#")).thenReturn("a");
 
-        final Object[] args = Pick.BuildParameters.Generate.Default
-                .of(bb, Pick.BuildParameters.GetValues.INJECT)
-                .f(td.getDeclaredMethods().filter(named("baz")).getOnly())
-                .success()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance()
-                .f(ref);
+        final MethodDescription md = td.getDeclaredMethods().filter(named("baz")).getOnly();
+        final Object[] args = Dynamic.instance(make(GetValues.INJECT, bb, md), getClass().getClassLoader()).f(ref);
+
 
         assertThat(args[0], is("a"));
     }
 
     @Test
     public void should_complain_missing_annotation() {
-        final Exception fail = Pick.BuildParameters.Generate.Default
-                .of(bb, Pick.BuildParameters.GetValues.INJECT)
+        final Exception fail = BuildParameters.Generate.Default
+                .of(bb, GetValues.INJECT)
                 .f(td.getDeclaredMethods().filter(named("qux")).getOnly())
                 .fail();
 
@@ -78,38 +61,35 @@ public class PickTest {
 
     @Test
     public void should_call_foo() throws Exception {
-        final String foo = Pick.CallMethod.Generate.Default
-                .of(bb, GetString.class)
-                .f(td.getDeclaredMethods().filter(named("foo")).getOnly())
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance()
-                .f(new Object[]{});
+        final MethodDescription md = td.getDeclaredMethods().filter(named("foo")).getOnly();
+        final String foo = Dynamic.instance(make(GetString.class, bb, md), getClass().getClassLoader()).f(new Object[]{});
+
         assertThat(foo, is("foo"));
     }
 
     @Test
     public void should_create_bar() throws Exception {
-        final Bar bar = Pick.CallMethod.Generate.Default
-                .of(bb, GetBar.class)
-                .f(TypeDescription.ForLoadedType.of(Bar.class).getDeclaredMethods().filter(isConstructor()).getOnly())
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance()
-                .f(new Object[]{});
+        final MethodDescription md = TypeDescription.ForLoadedType.of(Bar.class).getDeclaredMethods().filter(isConstructor()).getOnly();
+        final Bar bar = Dynamic.instance(make(GetBar.class, bb, md), getClass().getClassLoader()).f(new Object[]{});
 
         assertNotNull(bar);
     }
 
     @Test
     public void should_pick_bar() {
-        final String bar = Pick.Default.of(bb, GetString.class, Pick.BuildParameters.GetValues.CONF)
+        final String bar = Pick.Default.of(bb, GetString.class, GetValues.CONF)
                                        .f(td.getDeclaredMethods().filter(named("bar")).getOnly())
                                        .f(ConfigFactory.parseString("a = bar"))
                                        .success();
         assertThat(bar, is("bar"));
+    }
+
+    static <T extends Pick.CallMethod<?>> DynamicType.Unloaded<T> make(Class<T> clazz, ByteBuddy bb, MethodDescription md) {
+        return Pick.CallMethod.Generate.Default.of(bb, clazz).f(md);
+    }
+
+    static <T extends BuildParameters<?>> DynamicType.Unloaded<T> make(GetValues<T> getValues, ByteBuddy bb, MethodDescription md) {
+        return BuildParameters.Generate.Default.of(bb, getValues).f(md).success();
     }
 
     public static final class Foo {

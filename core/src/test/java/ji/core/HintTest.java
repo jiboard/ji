@@ -28,7 +28,6 @@ import net.bytebuddy.asm.Advice.Origin;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import org.junit.Test;
 
 import java.lang.annotation.Annotation;
@@ -46,7 +45,7 @@ public class HintTest {
     public void should_generate_advice_inline_class() throws Exception {
         final GenerateInlineClass.Default generate = GenerateInlineClass.Default.of(new ByteBuddy());
         final DynamicType.Unloaded<?> unloaded = generate.f(TypeDescription.ForLoadedType.of(Foo.class));
-        final Class<?> generated = unloaded.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION).getLoaded();
+        final Class<?> generated = Dynamic.load(unloaded, getClass().getClassLoader());
         final Method enter = generated.getDeclaredMethod("enter", String.class);
         Dispatcher.register("ji.core.HintTest$Foo#enter", args -> args[0]);
 

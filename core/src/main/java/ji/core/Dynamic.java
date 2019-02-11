@@ -27,7 +27,7 @@ final class Dynamic {
     }
 
     @SuppressWarnings("unchecked")
-    private static <A> Class<? extends A> load(DynamicType.Unloaded<A> unloaded, ClassLoader loader) {
+    static <A> Class<? extends A> load(DynamicType.Unloaded<A> unloaded, ClassLoader loader) {
         try {
             return (Class<? extends A>) loader.loadClass(unloaded.getTypeDescription().getName());
         } catch (ClassNotFoundException e) {
