@@ -41,7 +41,7 @@ public final class Dispatcher {
     private static Map<String, Handler> update(Map<String, Handler> cur, Map<String, Handler> handlers) {
         final Map<String, Handler> u = new HashMap<>(cur);
         u.putAll(handlers);
-        return Collections.unmodifiableMap(u);
+        return u;
     }
 
     public static Object execute(String name, Object... args) {

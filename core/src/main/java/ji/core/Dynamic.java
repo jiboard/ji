@@ -1,5 +1,6 @@
 package ji.core;
 
+import fj.function.Try1;
 import net.bytebuddy.dynamic.DynamicType;
 
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default.INJECTION;
@@ -17,11 +18,21 @@ final class Dynamic {
      * @return
      * @throws Exception
      */
-    public static <A> A instance(DynamicType.Unloaded<A> unloaded, ClassLoader loader) throws Exception {
-        return unloaded.load(loader, INJECTION)
-                       .getLoaded()
-                       .getDeclaredConstructor()
-                       .newInstance();
+    static <A> A instance(DynamicType.Unloaded<A> unloaded, ClassLoader loader) throws Exception {
+        return instance(unloaded, loader, c -> c.getDeclaredConstructor().newInstance());
+    }
+
+    static <A> A instance(DynamicType.Unloaded<A> unloaded, ClassLoader loader, Try1<Class<? extends A>, A, Exception> f) throws Exception {
+        return f.f(load(unloaded, loader));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <A> Class<? extends A> load(DynamicType.Unloaded<A> unloaded, ClassLoader loader) {
+        try {
+            return (Class<? extends A>) loader.loadClass(unloaded.getTypeDescription().getName());
+        } catch (ClassNotFoundException e) {
+            return unloaded.load(loader, INJECTION).getLoaded();
+        }
     }
 
     private Dynamic() {}

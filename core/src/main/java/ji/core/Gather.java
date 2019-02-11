@@ -101,7 +101,7 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
                 return AnnotationAccessor.TRANSFORM.f(md).map(av -> av.resolve(TypeDescription[].class)).map(tds -> gather(md, tds, pre));
             }
 
-            Transforms gather(MethodDescription md, TypeDescription[] tds, Transforms pre) {
+            private Transforms gather(MethodDescription md, TypeDescription[] tds, Transforms pre) {
                 return config -> ref -> ab -> ptdm.f(md).f(config).map(tm -> {
                     final List<Transformer> transformers = Functional.safeMap(transformerWith(ref)).f(List.list(tds));
                     final Transformer transformer = new Transformer.Compound(transformers.toJavaList());

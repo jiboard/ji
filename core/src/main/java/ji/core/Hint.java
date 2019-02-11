@@ -31,7 +31,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import java.lang.Class;
 
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default.INJECTION;
 import static net.bytebuddy.implementation.MethodCall.invoke;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -194,14 +193,17 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
                             .map(d -> P.p(key.f(d), make(d)));
                 return advice -> {
                     final Class<?> adviceClass = advice.getClass();
-                    return p2s.map(p -> p.map2(u -> u.load(adviceClass.getClassLoader(), INJECTION).getLoaded()))
-                              .map(p -> p.map2(Try.f(c -> c.getDeclaredConstructor(adviceClass).newInstance(advice))))
-                              .foldLeft((u, p) -> {
-                                  Dispatcher.register(p._1(), (Dispatcher.Handler) p._2().success());
-                                  return u;
-                              }, Unit.unit())
-                            ;
+                    return p2s.map(p -> p.map2(handler(advice, adviceClass))).foldLeft(this::register, Unit.unit());
                 };
+            }
+
+            private Unit register(Unit u, P2<String, Validation<Exception, Object>> p) {
+                Dispatcher.register(p._1(), (Dispatcher.Handler) p._2().success());
+                return u;
+            }
+
+            private F<DynamicType.Unloaded<Object>, Validation<Exception, Object>> handler(Object advice, Class<?> adviceClass) {
+                return Try.f(u -> Dynamic.instance(u, adviceClass.getClassLoader(), c -> c.getDeclaredConstructor(adviceClass).newInstance(advice)));
             }
 
             private DynamicType.Unloaded<Object> make(MethodDescription md) {

@@ -6,15 +6,14 @@ import fj.data.TreeMap;
 import fj.data.Validation;
 import ji.core.Gather.Transform.GetAdvice;
 import ji.core.Pick.BuildParameters.ByRef;
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 
-import static ji.core.Pick.BuildParameters.GetValues.INJECT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -52,15 +51,13 @@ public class GatherTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void should_gather_method_annotated_with_transform() {
         final MethodDescription desc = td.getDeclaredMethods().filter(named("bar")).getOnly();
 
-        final ByteBuddy bb = new ByteBuddy();
-        final Pick.CallMethod.Generate<GetAdvice> cons = Pick.CallMethod.Generate.Default.of(bb, GetAdvice.class);
-        final Pick.BuildParameters.Generate<ByRef> args = Pick.BuildParameters.Generate.Default.of(bb, INJECT);
-
-        final Hint hint = mock(Hint.class);
-        when(hint.f(ArgumentMatchers.any())).thenReturn(AgentBuilder.Transformer.NoOp.INSTANCE);
+        final Pick.CallMethod.Generate<GetAdvice> cons = md -> mock(DynamicType.Unloaded.class);
+        final Pick.BuildParameters.Generate<ByRef> args = md -> Validation.fail(MockError.SINGLETON);
+        final Hint hint = f -> AgentBuilder.Transformer.NoOp.INSTANCE;
 
         final AgentBuilder mab = mock(AgentBuilder.class);
         final AgentBuilder.Identified.Narrowable narrowable = mock(AgentBuilder.Identified.Narrowable.class);

@@ -23,11 +23,17 @@ import fj.Ord;
 import fj.P;
 import fj.P2;
 import fj.data.List;
+import fj.data.Option;
 import fj.data.TreeMap;
+import ji.core.Gather.Export;
+import ji.core.Gather.Exports;
+import ji.core.Gather.Transform;
+import ji.core.Gather.Transforms;
 import ji.loader.Compoundable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
@@ -61,21 +67,29 @@ public final class Main {
 
         final Config config = ConfigFactory.load();
 
-        final P2<Gather.Ref, Gather.Transforms> pair = classesAnnotated(Plugin.class)
+        final P2<Exports, Transforms> init = P.p(conf -> TreeMap.empty(Ord.stringOrd), conf -> ref -> ab -> ab);
+
+        final P2<Gather.Ref, Transforms> pair = classesAnnotated(Plugin.class)
                 .map(n -> pool.describe(n).resolve())
-                .map(t -> {
-                    LOG.info("Gather %s", t);
-                    return t.getDeclaredMethods();
-                })
+                .map(Main::declaredMethods)
                 .bind(List::iterableList)
-                .foldLeft(gather(bb, comp), P.p(conf -> TreeMap.empty(Ord.stringOrd), conf -> ref -> ab -> ab))
-                .map1(f -> f.f(config)).map1(m -> k -> m.get(k).some());
+                .foldLeft(gather(bb, comp), init)
+                .map1(f -> f.f(config))
+                .map1(m -> k -> m.get(k).some());
 
         pair._2().f(config).f(pair._1()).f(ab(bb)).installOn(inst);
     }
 
+    private static MethodList<MethodDescription.InDefinedShape> declaredMethods(TypeDescription t) {
+        LOG.info("Gather %s", t);
+        return t.getDeclaredMethods();
+    }
+
     @VisibleForTesting
-    static F<P2<Gather.Exports, Gather.Transforms>, F<MethodDescription.InDefinedShape, P2<Gather.Exports, Gather.Transforms>>> gather(ByteBuddy bb, Compoundable comp) {
+    static F<P2<Exports, Transforms>, F<MethodDescription.InDefinedShape, P2<Exports, Transforms>>> gather(ByteBuddy bb, Compoundable comp) {
+        final Export.Default export = Export.Default.of(bb);
+        final Transform.Default transform = Transform.Default.of(bb, comp);
+
         return pair -> md -> {
 
             if (!md.isStatic()) {
@@ -93,16 +107,13 @@ public final class Main {
                 return pair;
             }
 
-            return Gather.Export.Default
-                    .of(bb).f(md, pair._1()).map(e -> P.p(e, pair._2()))
-                    .toOption()
-                    .orElse(Gather.Transform.Default
-                                    .of(bb, comp).f(md, pair._2()).map(t -> P.p(pair._1(), t))
-                                    .toOption())
-                    .orSome(() -> {
-                        LOG.debug("Ignored invalid annotated method %s", md);
-                        return pair;
-                    });
+            final Option<P2<Exports, Transforms>> exportsMayChanged = export.f(md, pair._1()).map(e -> P.p(e, pair._2())).toOption();
+            final Option<P2<Exports, Transforms>> transformsMayChanged = transform.f(md, pair._2()).map(t -> P.p(pair._1(), t)).toOption();
+
+            return exportsMayChanged.orElse(transformsMayChanged).orSome(() -> {
+                LOG.debug("Ignored invalid annotated method %s", md);
+                return pair;
+            });
         };
 
     }
