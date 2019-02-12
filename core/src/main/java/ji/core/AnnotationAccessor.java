@@ -1,7 +1,6 @@
 package ji.core;
 
 import fj.F;
-import fj.data.Either;
 import fj.data.Validation;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
@@ -35,10 +34,6 @@ enum AnnotationAccessor implements F<AnnotationSource, Validation<Exception, Ann
     @Override
     public Validation<Exception, AnnotationValue<?, ?>> f(AnnotationSource annotationSource) {
         final AnnotationList list = annotationSource.getDeclaredAnnotations().filter(matcher);
-        return Validation.validation(Either.iif(
-                list.size() == 1,
-                () -> list.getOnly().getValue(method),
-                () -> new IllegalStateException("None " + matcher)
-        ));
+        return Functional.validation(list.size() == 1, () -> list.getOnly().getValue(method), () -> new IllegalStateException("None " + matcher));
     }
 }
