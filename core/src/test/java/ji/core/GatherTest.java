@@ -77,16 +77,16 @@ public class GatherTest {
         verify(extendable).asTerminalTransformation();
     }
 
-    public static final class Foo {
-        @Plugin.Export
+    public static final class Foo implements Plugin {
+        @Export
         public static String foo() {return "foo";}
 
-        @Plugin.Transform(with = Bar.class)
+        @Transform(with = Bar.class)
         public static ElementMatcher<? super TypeDescription> bar() {
             return named("");
         }
 
-        public static final class Bar implements Plugin.Matchable {
+        public static final class Bar implements Matchable {
 
             @Override
             public ElementMatcher<? super MethodDescription> method() {

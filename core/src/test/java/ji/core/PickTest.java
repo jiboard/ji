@@ -92,12 +92,12 @@ public class PickTest {
         return BuildParameters.Generate.Default.of(bb, getValues).f(md).success();
     }
 
-    public static final class Foo {
+    public static final class Foo implements Plugin {
         public static String foo() {return "foo";}
 
-        public static String bar(@Plugin.Conf("a") String a) {return a;}
+        public static String bar(@Conf("a") String a) {return a;}
 
-        public static Object baz(@Plugin.Inject Object a) {return a;}
+        public static Object baz(@Inject Object a) {return a;}
 
         public static Object qux(Object a) {return a;}
     }

@@ -50,23 +50,23 @@ public class MainTest {
 
 
     @AutoService(Plugin.class)
-    public static final class Foo {
+    public static final class Foo implements Plugin {
         public static final AtomicReference<String> REF = new AtomicReference<>();
 
-        @Plugin.Transform(with = CaptureMethod.class)
+        @Transform(with = CaptureMethod.class)
         public static ElementMatcher<? super TypeDescription> bar() {
             return nameEndsWith("Bar");
         }
 
-        @Plugin.Export
+        @Export
         public static AtomicReference<String> ref() {
             return REF;
         }
 
-        public static class CaptureMethod implements Plugin.Matchable {
+        public static class CaptureMethod implements Matchable {
             private final AtomicReference<String> ref;
 
-            public CaptureMethod(@Plugin.Inject AtomicReference<String> ref) {this.ref = ref;}
+            public CaptureMethod(@Inject AtomicReference<String> ref) {this.ref = ref;}
 
             @Advice.OnMethodEnter
             public void enter(@Advice.Origin("#m") String method) {
