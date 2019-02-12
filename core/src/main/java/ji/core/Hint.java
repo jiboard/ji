@@ -1,7 +1,10 @@
 package ji.core;
 
 import com.google.common.annotations.VisibleForTesting;
-import fj.*;
+import fj.F;
+import fj.P;
+import fj.P2;
+import fj.Try;
 import fj.data.List;
 import fj.data.Validation;
 import ji.loader.Compoundable;
@@ -28,8 +31,6 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
-import java.lang.Class;
-
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.implementation.MethodCall.invoke;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -53,7 +54,7 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
         static Default of(ByteBuddy bb, Compoundable comp, TypeDescription td) {
             final DynamicType.Unloaded<?> unloaded = GenerateInlineClass.Default.of(bb).f(td);
             final String inlineClass = unloaded.getTypeDescription().getTypeName();
-            final Registry registry = GenerateHandler.Default.of(bb).f(td);
+            final Registry<Plugin.Matchable> registry = GenerateHandler.Default.<Plugin.Matchable>of(bb).f(td);
             final ClassFileLocator locator = new ClassFileLocator.Simple(singletonMap(inlineClass, unloaded.getBytes()));
             return new Default(comp, locator, inlineClass, registry);
         }
@@ -61,10 +62,10 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
         private final Compoundable comp;
         private final ClassFileLocator locator;
         private final String inlineClass;
-        private final Registry registry;
+        private final Registry<Plugin.Matchable> registry;
 
         @VisibleForTesting
-        Default(Compoundable comp, ClassFileLocator locator, String inlineClass, Registry registry) {
+        Default(Compoundable comp, ClassFileLocator locator, String inlineClass, Registry<Plugin.Matchable> registry) {
             this.comp = comp;
             this.locator = locator;
             this.inlineClass = inlineClass;
@@ -79,12 +80,13 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
                 @Override
                 public synchronized DynamicType.Builder<?> transform(DynamicType.Builder<?> b, TypeDescription td, ClassLoader cl, JavaModule m) {
                     if (delegate == null) {
-                        delegate = advice.f(comp.include(cl)).<AgentBuilder.Transformer>map(o -> {
-                            registry.f(o);
-                            return new ForAdvice().include(locator).advice(o.method(), inlineClass);
-                        }).on(WarningTransformer::new);
+                        delegate = advice.f(comp.include(cl)).map(this::transformer).on(WarningTransformer::new);
                     }
                     return delegate.transform(b, td, cl, m);
+                }
+
+                private AgentBuilder.Transformer transformer(Plugin.Matchable o) {
+                    return new ForAdvice().include(locator).advice(registry.f(o).method(), inlineClass);
                 }
             };
         }
@@ -178,15 +180,15 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
      *
      * @see Dispatcher.Handler
      */
-    interface GenerateHandler extends F<TypeDescription, Registry> {
+    interface GenerateHandler<T> extends F<TypeDescription, Registry<T>> {
 
-        final class Default implements GenerateHandler {
+        final class Default<T> implements GenerateHandler<T> {
             private static final String FIELD_ADVICE = "advice";
             private static final F<MethodDescription, String> NAME_CLASS =
                     md -> md.getDeclaringType().getTypeName() + "$Handler$" + md.getName();
 
-            static Default of(ByteBuddy bb) {
-                return new Default(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
+            static <T> Default<T> of(ByteBuddy bb) {
+                return new Default<>(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
             }
 
             private final ByteBuddy bb;
@@ -207,28 +209,25 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
             }
 
             @Override
-            public Registry f(TypeDescription td) {
-                final List<P2<String, DynamicType.Unloaded<Object>>> p2s =
+            public Registry<T> f(TypeDescription td) {
+                final List<P2<String, DynamicType.Unloaded<Dispatcher.Handler>>> p2s =
                         List.iterableList(td.getDeclaredMethods().filter(adviceMethod))
                             .map(d -> P.p(key.f(d), make(d)));
                 return advice -> {
-                    final Class<?> adviceClass = advice.getClass();
-                    return p2s.map(p -> p.map2(handler(advice, adviceClass))).foldLeft(this::register, Unit.unit());
+                    for (P2<String, Validation<Exception, Dispatcher.Handler>> p : p2s.map(p -> p.map2(handler(advice)))) {
+                        Dispatcher.register(p._1(), p._2().success());
+                    }
+                    return advice;
                 };
             }
 
-            private Unit register(Unit u, P2<String, Validation<Exception, Object>> p) {
-                Dispatcher.register(p._1(), (Dispatcher.Handler) p._2().success());
-                return u;
-            }
-
-            private F<DynamicType.Unloaded<Object>, Validation<Exception, Object>> handler(Object advice, Class<?> adviceClass) {
+            private F<DynamicType.Unloaded<Dispatcher.Handler>, Validation<Exception, Dispatcher.Handler>> handler(Object advice) {
+                final Class<?> adviceClass = advice.getClass();
                 return Try.f(u -> Dynamic.instance(u, adviceClass.getClassLoader(), c -> c.getDeclaredConstructor(adviceClass).newInstance(advice)));
             }
 
-            private DynamicType.Unloaded<Object> make(MethodDescription md) {
-                return bb.subclass(Object.class, ConstructorStrategy.Default.NO_CONSTRUCTORS)
-                         .implement(Dispatcher.Handler.class)
+            private DynamicType.Unloaded<Dispatcher.Handler> make(MethodDescription md) {
+                return bb.subclass(Dispatcher.Handler.class, ConstructorStrategy.Default.NO_CONSTRUCTORS)
                          .name(name.f(md))
                          .defineField(FIELD_ADVICE, md.getDeclaringType(), Visibility.PRIVATE, FieldManifestation.FINAL)
                          .defineConstructor(Visibility.PUBLIC)
@@ -258,5 +257,5 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
         }
     }
 
-    interface Registry extends F<Object, Unit> {}
+    interface Registry<T> extends F<T, T> {}
 }

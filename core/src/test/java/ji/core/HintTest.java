@@ -25,15 +25,18 @@ import ji.loader.Compoundable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.asm.Advice.OnMethodEnter;
 import net.bytebuddy.asm.Advice.Origin;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.Test;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -66,9 +69,9 @@ public class HintTest {
 
     @Test
     public void should_create_advice_handlers() {
-        final GenerateHandler.Default generate = GenerateHandler.Default.of(new ByteBuddy());
+        final GenerateHandler.Default<Object> generate = GenerateHandler.Default.of(new ByteBuddy());
         final TypeDescription desc = TypeDescription.ForLoadedType.of(Foo.class);
-        final Hint.Registry registry = generate.f(desc);
+        final Hint.Registry<Object> registry = generate.f(desc);
         registry.f(new Foo());
 
         assertThat(Dispatcher.execute("ji.core.HintTest$Foo#enter", "method"), is("method"));
@@ -78,7 +81,7 @@ public class HintTest {
     public void should_failed_to_transform() {
         final Compoundable comp = mock(Compoundable.class);
         final ClassFileLocator locator = mock(ClassFileLocator.class);
-        final Hint.Registry registry = mock(Hint.Registry.class);
+        final Hint.Registry<Plugin.Matchable> registry = o -> o;
         final DynamicType.Builder builder = mock(DynamicType.Builder.class);
         final TypeDescription td = mock(TypeDescription.class);
         final ClassLoader loader = getClass().getClassLoader();
@@ -91,9 +94,14 @@ public class HintTest {
         verify(comp).include(loader);
     }
 
-    final static class Foo {
+    final static class Foo implements Plugin.Matchable {
         @OnMethodEnter(suppress = Throwable.class)
         String enter(@Origin("#m") String method) { return method;}
+
+        @Override
+        public ElementMatcher<? super MethodDescription> method() {
+            return named("");
+        }
     }
 
 }
