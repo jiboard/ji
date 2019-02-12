@@ -79,13 +79,10 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
                 @Override
                 public synchronized DynamicType.Builder<?> transform(DynamicType.Builder<?> b, TypeDescription td, ClassLoader cl, JavaModule m) {
                     if (delegate == null) {
-                        delegate = advice.f(comp.include(cl)).validation(
-                                WarningTransformer::new,
-                                o -> {
-                                    registry.f(o);
-                                    return new ForAdvice().include(locator).advice(o.method(), inlineClass);
-                                }
-                        );
+                        delegate = advice.f(comp.include(cl)).<AgentBuilder.Transformer>map(o -> {
+                            registry.f(o);
+                            return new ForAdvice().include(locator).advice(o.method(), inlineClass);
+                        }).on(WarningTransformer::new);
                     }
                     return delegate.transform(b, td, cl, m);
                 }
@@ -96,7 +93,7 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
 
             private final Exception cause;
 
-            public WarningTransformer(Exception cause) {
+            WarningTransformer(Exception cause) {
                 this.cause = cause;
             }
 
