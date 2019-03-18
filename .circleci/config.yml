@@ -10,3 +10,4 @@ jobs:
       - checkout
       - run: mvn clean test jacoco:report
       - run: mvn coveralls:report -DrepoToken=$COVERALL
+      - run: mvn sonar:sonar -Dsonar.projectKey=jiboard_ji  -Dsonar.organization=jiboard -Dsonar.host.url=https://sonarcloud.io  -Dsonar.login=${SONAR_TOKEN}

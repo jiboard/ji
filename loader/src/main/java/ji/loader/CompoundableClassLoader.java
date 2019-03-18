@@ -48,7 +48,7 @@ class CompoundableClassLoader extends LaunchedURLClassLoader implements Compound
                     final Class<?> aClass = external.loadClass(name);
                     if (resolve) resolveClass(aClass);
                     return aClass;
-                } catch (ClassNotFoundException ignore) { }
+                } catch (ClassNotFoundException ignore) { /* ignore here */}
             }
 
             throw e;

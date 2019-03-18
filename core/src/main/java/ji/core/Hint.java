@@ -41,13 +41,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
  */
 interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>, AgentBuilder.Transformer> {
 
-    ElementMatcher<? super MethodDescription> METHOD_MATCHER = isAnnotatedWith(Advice.OnMethodEnter.class)
-            .or(isAnnotatedWith(Advice.OnMethodExit.class));
-
-    F<MethodDescription, String> DEFAULT_KEY = md -> md.getDeclaringType().getTypeName() + "#" + md.getName();
-
     /**
-     *
+     * Default implementation.
      */
     final class Default implements Hint {
 
@@ -126,7 +121,7 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
             private final ElementMatcher<? super MethodDescription> adviceMethod;
 
             static Default of(ByteBuddy bb) {
-                return new Default(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
+                return new Default(bb, KeyNamingStrategy.DEFAULT, Methods.ENTER_OR_EXIT, NAME_CLASS);
             }
 
             private Default(
@@ -160,9 +155,9 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
 
             private Implementation call(MethodDescription md) {
                 try {
-                    final ArgumentLoader.Factory name = ArgumentLoader.ForStackManipulation.of(key.f(md));
+                    final ArgumentLoader.Factory advice = ArgumentLoader.ForStackManipulation.of(key.f(md));
                     return invoke(Dispatcher.class.getDeclaredMethod("execute", String.class, Object[].class))
-                            .with(name, ArgumentLoader.ForMethodParameterArray.ForInstrumentedMethod.INSTANCE)
+                            .with(advice, ArgumentLoader.ForMethodParameterArray.ForInstrumentedMethod.INSTANCE)
                             .withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
                 } catch (NoSuchMethodException e) {
                     return FixedValue.nullValue();
@@ -193,7 +188,7 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
             private final ElementMatcher<? super MethodDescription> adviceMethod;
 
             static <T> Default<T> of(ByteBuddy bb) {
-                return new Default<>(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
+                return new Default<>(bb, KeyNamingStrategy.DEFAULT, Methods.ENTER_OR_EXIT, NAME_CLASS);
             }
 
             Default(
@@ -258,4 +253,25 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
     }
 
     interface Registry<T> extends F<T, T> {}
+
+    final class Methods {
+        private static final ElementMatcher<MethodDescription> ENTER_OR_EXIT =
+                isAnnotatedWith(Advice.OnMethodEnter.class)
+                        .or(isAnnotatedWith(Advice.OnMethodExit.class));
+
+        private Methods() {}
+    }
+
+    abstract class KeyNamingStrategy implements F<MethodDescription, String> {
+
+        private static final KeyNamingStrategy DEFAULT = new KeyNamingStrategy() {
+            @Override
+            public String f(MethodDescription md) {
+                return md.getDeclaringType().getTypeName() + "#" + md.getName();
+            }
+        };
+
+        private KeyNamingStrategy() {}
+    }
+
 }

@@ -94,12 +94,12 @@ public class HintTest {
         verify(comp).include(loader);
     }
 
-    final static class Foo implements Plugin.Matchable {
+    static final class Foo implements Plugin.Matchable {
         @OnMethodEnter(suppress = Throwable.class)
         String enter(@Origin("#m") String method) { return method;}
 
         @Override
-        public ElementMatcher<? super MethodDescription> method() {
+        public ElementMatcher<MethodDescription> method() {
             return named("");
         }
     }

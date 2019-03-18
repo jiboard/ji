@@ -74,7 +74,7 @@ public class MainTest {
             }
 
             @Override
-            public ElementMatcher<? super MethodDescription> method() {
+            public ElementMatcher<MethodDescription> method() {
                 return named("baz");
             }
         }

@@ -67,9 +67,9 @@ public abstract class Logger {
         DEBUG, INFO, WARN;
 
         public void log(String message, Throwable cause) {
-            synchronized (System.err) {
-                System.err.printf("[JI] %5s - %s%n", name(), message);
-                if (cause != null) cause.printStackTrace(System.err);
+            synchronized (System.out) {
+                System.out.printf("[JI] %5s - %s%n", name(), message);
+                if (cause != null) cause.printStackTrace(System.out);
             }
         }
     }

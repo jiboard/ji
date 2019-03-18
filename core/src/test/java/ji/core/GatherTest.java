@@ -89,7 +89,7 @@ public class GatherTest {
         public static final class Bar implements Matchable {
 
             @Override
-            public ElementMatcher<? super MethodDescription> method() {
+            public ElementMatcher<MethodDescription> method() {
                 return named("");
             }
         }

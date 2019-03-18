@@ -26,8 +26,6 @@ import net.bytebuddy.implementation.bytecode.member.MethodReturn;
 import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
 import net.bytebuddy.matcher.ElementMatcher;
 
-import java.lang.Class;
-
 import static net.bytebuddy.description.type.TypeDescription.ForLoadedType.of;
 import static net.bytebuddy.description.type.TypeDescription.Generic.OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
@@ -52,13 +50,13 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
 
         private final ByteBuddy bb;
         private final GetValues<D> getValues;
-        private final Class<A> callMethodClass;
+        private final java.lang.Class<A> callMethodClass;
 
         static <A extends CallMethod<B>, B, C, D extends BuildParameters<C>> Default<A, B, C, D> of(
-                ByteBuddy bb, Class<A> callMethodClass, GetValues<D> getValues
+                ByteBuddy bb, java.lang.Class<A> callMethodClass, GetValues<D> getValues
         ) { return new Default<>(bb, callMethodClass, getValues);}
 
-        private Default(ByteBuddy bb, Class<A> callMethodClass, GetValues<D> getValues) {
+        private Default(ByteBuddy bb, java.lang.Class<A> callMethodClass, GetValues<D> getValues) {
             this.bb = bb;
             this.getValues = getValues;
             this.callMethodClass = callMethodClass;
@@ -144,7 +142,7 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
                 protected F<String, StackManipulation> call(TypeDescription.Generic g) {
                     return s -> new StackManipulation.Compound(
                             MethodVariableAccess.REFERENCE.loadFrom(1),
-                            new TextConstant(Gather.Ref.KEY.f(g, s)),
+                            new TextConstant(Gather.TypeNamingStrategy.DEFAULT.f(g, s)),
                             MethodInvocation.invoke(method).virtual(td)
                     );
                 }
@@ -152,9 +150,9 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
             };
 
             private final AnnotationAccessor aa;
-            private final Class<T> support;
+            private final java.lang.Class<T> support;
 
-            private GetValues(AnnotationAccessor aa, Class<T> support) {
+            private GetValues(AnnotationAccessor aa, java.lang.Class<T> support) {
                 this.aa = aa;
                 this.support = support;
             }
@@ -164,7 +162,7 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
                 return aa.f(pd).map(a -> a.resolve(String.class)).map(s -> call(pd.getType()).f(s));
             }
 
-            final Class<T> support() {
+            final java.lang.Class<T> support() {
                 return support;
             }
 
@@ -243,7 +241,7 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
 
                 private final DynamicType.Builder<T> builder;
 
-                static <T extends CallMethod<?>> Default<T> of(ByteBuddy bb, Class<T> clazz) {
+                static <T extends CallMethod<?>> Default<T> of(ByteBuddy bb, java.lang.Class<T> clazz) {
                     return new Default<>(bb.subclass(clazz).modifiers(Visibility.PUBLIC, TypeManifestation.FINAL));
                 }
 

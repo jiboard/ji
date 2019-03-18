@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @AutoService(ClassLoaderInjection.Target.class)
 public final class Dispatcher {
-    private final static AtomicReference<Map<String, Handler>> ref = new AtomicReference<>(Collections.emptyMap());
+    private static final AtomicReference<Map<String, Handler>> ref = new AtomicReference<>(Collections.emptyMap());
 
     static void register(String name, Handler handler) {
         registerAll(Collections.singletonMap(name, handler));
@@ -62,7 +62,7 @@ public final class Dispatcher {
     @VisibleForTesting
     static class DefaultHandler implements Handler {
 
-        private final static DefaultHandler INSTANCE = new DefaultHandler();
+        private static final DefaultHandler INSTANCE = new DefaultHandler();
 
         private DefaultHandler() {}
 

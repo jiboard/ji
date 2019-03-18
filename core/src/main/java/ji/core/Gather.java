@@ -53,7 +53,7 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
             Exports gather(MethodDescription md, String scope, Exports pre) {
                 return config -> {
                     final TreeMap<String, Object> map = pre.f(config);
-                    return pick.f(md).f(config).map(o -> map.set(Ref.KEY.f(md.getReturnType(), scope), o)).on(e -> {
+                    return pick.f(md).f(config).map(o -> map.set(TypeNamingStrategy.DEFAULT.f(md.getReturnType(), scope), o)).on(e -> {
                         Logger.LOG.warn(e, "Ignore %s", md);
                         return map;
                     });
@@ -150,11 +150,20 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
     /**
      * A function to get exported object by key.
      */
-    interface Ref extends F<String, Object> {
-        F2<TypeDescription.Generic, String, String> KEY = (generic, scope) -> generic.getTypeName() + "#" + scope;
-    }
+    interface Ref extends F<String, Object> {}
 
     interface Exports extends F<Config, TreeMap<String, Object>> {}
 
     interface Transforms extends F<Config, F<Ref, Define>> {}
+
+    abstract class TypeNamingStrategy implements F2<TypeDescription.Generic, String, String> {
+        static final TypeNamingStrategy DEFAULT = new TypeNamingStrategy() {
+            @Override
+            public String f(TypeDescription.Generic generic, String scope) {
+                return generic.getTypeName() + "#" + scope;
+            }
+        };
+
+        private TypeNamingStrategy() {}
+    }
 }

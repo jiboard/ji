@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.Class;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -37,11 +36,11 @@ import static java.util.Collections.list;
  */
 final class AutoServices {
 
-    static List<String> classesAnnotated(Class<?> cls) {
+    static List<String> classesAnnotated(java.lang.Class<?> cls) {
         return classAnnotated(cls, cls.getClassLoader());
     }
 
-    static List<String> classAnnotated(Class<?> cls, ClassLoader loader) {
+    static List<String> classAnnotated(java.lang.Class<?> cls, ClassLoader loader) {
         final F<URL, Validation<IOException, BufferedReader>> reader = Try.f(url -> {
             final URLConnection connection = url.openConnection();
             final InputStream stream = connection.getInputStream();

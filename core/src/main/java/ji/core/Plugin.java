@@ -75,6 +75,6 @@ public interface Plugin {
     }
 
     interface Matchable {
-        ElementMatcher<? super MethodDescription> method();
+        ElementMatcher<MethodDescription> method();
     }
 }
