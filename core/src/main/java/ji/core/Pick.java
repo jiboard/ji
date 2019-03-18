@@ -50,13 +50,13 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
      */
     final class Default<A extends CallMethod<B>, B, C, D extends BuildParameters<C>> implements Pick<C, B> {
 
-        static <A extends CallMethod<B>, B, C, D extends BuildParameters<C>> Default<A, B, C, D> of(
-                ByteBuddy bb, Class<A> callMethodClass, GetValues<D> getValues
-        ) { return new Default<>(bb, callMethodClass, getValues);}
-
         private final ByteBuddy bb;
         private final GetValues<D> getValues;
         private final Class<A> callMethodClass;
+
+        static <A extends CallMethod<B>, B, C, D extends BuildParameters<C>> Default<A, B, C, D> of(
+                ByteBuddy bb, Class<A> callMethodClass, GetValues<D> getValues
+        ) { return new Default<>(bb, callMethodClass, getValues);}
 
         private Default(ByteBuddy bb, Class<A> callMethodClass, GetValues<D> getValues) {
             this.bb = bb;
@@ -186,12 +186,12 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
              */
             final class Default<T extends BuildParameters<?>> implements BuildParameters.Generate<T> {
 
+                private final ByteBuddy bb;
+                private final GetValues<T> gv;
+
                 static <T extends BuildParameters<?>> Default<T> of(ByteBuddy bb, GetValues<T> gv) {
                     return new Default<>(bb, gv);
                 }
-
-                private final ByteBuddy bb;
-                private final GetValues<T> gv;
 
                 private Default(ByteBuddy bb, GetValues<T> gv) {
                     this.bb = bb;
@@ -241,11 +241,11 @@ interface Pick<A, B> extends F<MethodDescription, F<A, Validation<Exception, B>>
              */
             final class Default<T extends CallMethod<?>> implements CallMethod.Generate<T> {
 
+                private final DynamicType.Builder<T> builder;
+
                 static <T extends CallMethod<?>> Default<T> of(ByteBuddy bb, Class<T> clazz) {
                     return new Default<>(bb.subclass(clazz).modifiers(Visibility.PUBLIC, TypeManifestation.FINAL));
                 }
-
-                private final DynamicType.Builder<T> builder;
 
                 private Default(DynamicType.Builder<T> builder) {
                     this.builder = builder;

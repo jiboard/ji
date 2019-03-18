@@ -34,11 +34,11 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
 
         final class Default implements Export {
 
+            private final Pick<Config, Object> pick;
+
             static Default of(ByteBuddy bb) {
                 return new Default(Pick.Default.of(bb, GetExportObject.class, GetValues.CONF));
             }
-
-            private final Pick<Config, Object> pick;
 
             @VisibleForTesting
             Default(Pick<Config, Object> pick) {
@@ -71,6 +71,11 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
 
         final class Default implements Transform {
 
+            private final Pick<Config, ElementMatcher<? super TypeDescription>> ptdm;
+            private final Pick.BuildParameters.Generate<ByRef> args;
+            private final Pick.CallMethod.Generate<GetAdvice> cons;
+            private final F<TypeDescription, Hint> hint;
+
             static Default of(ByteBuddy bb, Compoundable comp) {
                 return new Default(
                         Pick.Default.of(bb, GetTypeMatcher.class, GetValues.CONF),
@@ -78,11 +83,6 @@ interface Gather<A, E extends Exception> extends F2<MethodDescription, A, Valida
                         Pick.CallMethod.Generate.Default.of(bb, GetAdvice.class),
                         td -> Hint.Default.of(bb, comp, td));
             }
-
-            private final Pick<Config, ElementMatcher<? super TypeDescription>> ptdm;
-            private final Pick.BuildParameters.Generate<ByRef> args;
-            private final Pick.CallMethod.Generate<GetAdvice> cons;
-            private final F<TypeDescription, Hint> hint;
 
             @VisibleForTesting
             Default(

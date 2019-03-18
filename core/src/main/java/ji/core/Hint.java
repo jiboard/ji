@@ -51,6 +51,11 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
      */
     final class Default implements Hint {
 
+        private final Compoundable comp;
+        private final ClassFileLocator locator;
+        private final String inlineClass;
+        private final Registry<Plugin.Matchable> registry;
+
         static Default of(ByteBuddy bb, Compoundable comp, TypeDescription td) {
             final DynamicType.Unloaded<?> unloaded = GenerateInlineClass.Default.of(bb).f(td);
             final String inlineClass = unloaded.getTypeDescription().getTypeName();
@@ -58,11 +63,6 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
             final ClassFileLocator locator = new ClassFileLocator.Simple(singletonMap(inlineClass, unloaded.getBytes()));
             return new Default(comp, locator, inlineClass, registry);
         }
-
-        private final Compoundable comp;
-        private final ClassFileLocator locator;
-        private final String inlineClass;
-        private final Registry<Plugin.Matchable> registry;
 
         @VisibleForTesting
         Default(Compoundable comp, ClassFileLocator locator, String inlineClass, Registry<Plugin.Matchable> registry) {
@@ -120,14 +120,14 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
 
             private static final F<TypeDescription, String> NAME_CLASS = td -> td.getTypeName() + "$InlineClass";
 
-            static Default of(ByteBuddy bb) {
-                return new Default(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
-            }
-
             private final ByteBuddy bb;
             private final F<MethodDescription, String> key;
             private final F<TypeDescription, String> name;
             private final ElementMatcher<? super MethodDescription> adviceMethod;
+
+            static Default of(ByteBuddy bb) {
+                return new Default(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
+            }
 
             private Default(
                     ByteBuddy bb,
@@ -187,14 +187,14 @@ interface Hint extends F<F<ClassLoader, Validation<Exception, Plugin.Matchable>>
             private static final F<MethodDescription, String> NAME_CLASS =
                     md -> md.getDeclaringType().getTypeName() + "$Handler$" + md.getName();
 
-            static <T> Default<T> of(ByteBuddy bb) {
-                return new Default<>(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
-            }
-
             private final ByteBuddy bb;
             private final F<MethodDescription, String> key;
             private final F<MethodDescription, String> name;
             private final ElementMatcher<? super MethodDescription> adviceMethod;
+
+            static <T> Default<T> of(ByteBuddy bb) {
+                return new Default<>(bb, DEFAULT_KEY, METHOD_MATCHER, NAME_CLASS);
+            }
 
             Default(
                     ByteBuddy bb,
