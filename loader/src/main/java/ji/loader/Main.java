@@ -35,10 +35,12 @@ public class Main {
 
     public static void premain(final String args, final Instrumentation inst) throws Exception {
         final URL[] urls = nestArchiveUrls(new JarFileArchive(getArchiveFileContains(Main.class)));
-        new CompoundableClassLoader(urls).include(Main.class.getClassLoader())
-                                         .loadClass(JI_CORE_MAIN)
-                                         .getMethod(PREMAIN, String.class, Instrumentation.class)
-                                         .invoke(null, args, inst);
+        try (CompoundableClassLoader loader = new CompoundableClassLoader(urls)) {
+            loader.include(Main.class.getClassLoader())
+                  .loadClass(JI_CORE_MAIN)
+                  .getMethod(PREMAIN, String.class, Instrumentation.class)
+                  .invoke(null, args, inst);
+        }
     }
 
     private static URL[] nestArchiveUrls(Archive archive) throws IOException {
