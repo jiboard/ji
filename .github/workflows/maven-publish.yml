@@ -24,6 +24,6 @@ jobs:
       run: mvn -B package --file pom.xml -P target-jdk6
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -Dregistry=https://maven.pkg.github.com/zhongl -Dtoken=GITHUB_TOKEN
+      run: mvn deploy -Dregistry=https://maven.pkg.github.com/zhongl -Dtoken=$GITHUB_TOKEN
       env:
         GITHUB_TOKEN: ${{ github.token }}
