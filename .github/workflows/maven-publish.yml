@@ -31,7 +31,7 @@ jobs:
     - name: Report coverage  
       run: mvn coveralls:report -DrepoToken=$COVERALL      
       env:
-        COVERALL= ${{secrets.COVERALLS}}
+        COVERALL: ${{secrets.COVERALLS}}
     
     - name: Build with Maven
       run: mvn -B package --file pom.xml -P target-jdk6
