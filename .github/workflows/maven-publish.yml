@@ -23,7 +23,7 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Setup version
-      run: mvn versions:set -DnewVersion=$GITHUB_REF
+      run: mvn versions:set -DnewVersion=$(basename $GITHUB_REF)
 
     - name: Test
       run: mvn clean test jacoco:report
