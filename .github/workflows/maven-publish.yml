@@ -29,16 +29,11 @@ jobs:
     - name: Test
       run: mvn clean test jacoco:report
 
-    - name: Report coverage  
-      run: mvn coveralls:report -DrepoToken=$COVERALL      
-      env:
-        COVERALL: ${{secrets.COVERALLS}}
-
     - name: Report Sonar
       run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY  -Dsonar.organization=$SONAR_ORGANIZATION -Dsonar.host.url=https://sonarcloud.io  -Dsonar.login=$SONAR_TOKEN
       env:
-        SONAR_ORGANIZATION: ${{secrets.SONAR_ORGANIZATION}}
-        SONAR_PROJECT_KEY: ${{secrets.SONAR_PROJECT_KEY}}
+        SONAR_ORGANIZATION: jiboard
+        SONAR_PROJECT_KEY: jiboard_ji
         SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}          
     
     - name: Build with Maven
@@ -46,5 +41,6 @@ jobs:
 
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+      if: ${{ github.event == 'release' }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
